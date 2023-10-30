@@ -162,6 +162,10 @@ func newIter(ctx context.Context, tx *Tx, it *badger.Iterator, begin, end string
 	return iter, nil
 }
 
+func (it *Iter) Close() {
+	it.it.Close()
+}
+
 func (it *Iter) setError(err error) {
 	it.it.Close()
 	it.err = err
