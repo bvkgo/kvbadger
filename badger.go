@@ -142,9 +142,7 @@ type Iter struct {
 
 	it *badger.Iterator
 
-	err   error
-	key   string
-	value io.Reader
+	err error
 
 	begin, end string
 	descending bool
@@ -158,7 +156,6 @@ func newIter(ctx context.Context, tx *Tx, it *badger.Iterator, begin, end string
 		end:        end,
 		descending: descend,
 	}
-	iter.fetch()
 	return iter, nil
 }
 
@@ -166,32 +163,14 @@ func (it *Iter) Close() {
 	it.it.Close()
 }
 
-func (it *Iter) setError(err error) {
-	it.it.Close()
-	it.err = err
-}
-
-// Err returns a non-nil error if iteration has encountered any failure.
-func (it *Iter) Err() error {
-	if !errors.Is(it.err, io.EOF) {
-		return it.err
-	}
-	return nil
-}
-
-// Current returns the key-value pair at current iterator position. Returns
-// false if iterator has reached the end or encountered any failure.
-func (it *Iter) Current(ctx context.Context) (string, io.Reader, bool) {
+func (it *Iter) Fetch(ctx context.Context, advance bool) (string, io.Reader, error) {
 	if it.err != nil {
-		return "", nil, false
+		return "", nil, it.err
 	}
-	return it.key, it.value, true
-}
-
-func (it *Iter) fetch() {
 	if !it.it.Valid() {
-		it.setError(io.EOF)
-		return
+		it.it.Close()
+		it.err = io.EOF
+		return "", nil, it.err
 	}
 
 	item := it.it.Item()
@@ -215,30 +194,23 @@ func (it *Iter) fetch() {
 		// pass
 	}
 	if done {
-		it.setError(io.EOF)
-		return
+		it.it.Close()
+		it.err = io.EOF
+		return "", nil, it.err
 	}
 
 	v, err := item.ValueCopy(nil)
 	if err != nil {
-		it.setError(err)
-		return
+		it.it.Close()
+		it.err = err
+		return "", nil, it.err
 	}
 
-	it.key, it.value = k, bytes.NewReader(v)
-}
-
-// Next advances the iterator and returns next key-value pair. Returns
-// false when reaches to the end or encounters a failure.
-func (it *Iter) Next(ctx context.Context) (string, io.Reader, bool) {
-	if it.err != nil {
-		return "", nil, false
+	if advance {
+		it.it.Next()
 	}
 
-	it.it.Next()
-	it.fetch()
-
-	return it.Current(ctx)
+	return k, bytes.NewReader(v), nil
 }
 
 // Scan reads all keys in the database through the iterator, in no-particular
