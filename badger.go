@@ -156,6 +156,10 @@ func newIter(ctx context.Context, tx *Tx, it *badger.Iterator, begin, end string
 		end:        end,
 		descending: descend,
 	}
+	if !it.Valid() {
+		it.Close()
+		iter.err = io.EOF
+	}
 	return iter, nil
 }
 
@@ -167,10 +171,13 @@ func (it *Iter) Fetch(ctx context.Context, advance bool) (string, io.Reader, err
 	if it.err != nil {
 		return "", nil, it.err
 	}
-	if !it.it.Valid() {
-		it.it.Close()
-		it.err = io.EOF
-		return "", nil, it.err
+	if advance {
+		it.it.Next()
+		if !it.it.Valid() {
+			it.it.Close()
+			it.err = io.EOF
+			return "", nil, it.err
+		}
 	}
 
 	item := it.it.Item()
@@ -204,10 +211,6 @@ func (it *Iter) Fetch(ctx context.Context, advance bool) (string, io.Reader, err
 		it.it.Close()
 		it.err = err
 		return "", nil, it.err
-	}
-
-	if advance {
-		it.it.Next()
 	}
 
 	return k, bytes.NewReader(v), nil

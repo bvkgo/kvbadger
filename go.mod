@@ -3,7 +3,7 @@ module github.com/bvkgo/kvbadger
 go 1.21
 
 require (
-	github.com/bvkgo/kv v0.0.0-20231108231021-11e1a083e357
+	github.com/bvkgo/kv v0.0.0-20231109000250-749bef1474a8
 	github.com/dgraph-io/badger/v4 v4.2.0
 )
 
