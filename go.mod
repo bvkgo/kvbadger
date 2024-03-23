@@ -3,7 +3,7 @@ module github.com/bvkgo/kvbadger
 go 1.21
 
 require (
-	github.com/bvkgo/kv v0.0.0-20231109000250-749bef1474a8
+	github.com/bvkgo/kv v0.0.0-20240323055300-c2b9891dec55
 	github.com/dgraph-io/badger/v4 v4.2.0
 )
 
@@ -17,6 +17,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/flatbuffers v1.12.1 // indirect
+	github.com/google/uuid v1.4.0 // indirect
 	github.com/klauspost/compress v1.12.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	go.opencensus.io v0.22.5 // indirect
